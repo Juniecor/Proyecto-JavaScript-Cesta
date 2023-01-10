@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8.1</title>
+    <!-- Bootstrap css -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <!-- Bootstrap Icons 1.9.1 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" integrity="sha384-xeJqLiuOvjUBq3iGOjvSQSIlwrpqjSHXpduPd6rQpuiM3f5/ijby8pCsnbu5S81n" crossorigin="anonymous">
+    <style>
+
+        /* input:valid{border: 2px solid green;}
+        input:invalid{border: 2px solid red;} */
+
+        header{
+            background-color: lightgray;
+            text-align: center;
+        }
+        .titulo{
+            display: flex;
+            justify-content: center;
+            
+        }
+
+        .prodCesta{
+            display: flex;
+            justify-content: space-around;
+        }
+        #fotos{
+            width: 50px;
+        }
+
+        .table-responsive{
+            text-align: end;
+        }
+
+        button{color:red;border-color:red;} 
+    </style>
+    <script>
+
+        class Producto{
+
+            static cod;
+            nombre;
+            precio;
+            imagen;
+            cantidad;
+
+            constructor(cod1, nombre1, precio1, imagen1){
+                this.cod = cod1;
+                this.nombre = nombre1;
+                this.precio = precio1;
+                this.imagen = imagen1;
+                this.cantidad = 0;
+            }
+
+        }
+
+        class ContProductos{
+
+            #array = [];
+            #cesta;
+            
+            constructor(productos){
+                
+                
+
+                productos.forEach(element => {
+                    
+                    var producto = new Producto(element.cod, element.nombre, element.precio, element.imagen);
+
+                    this.#array.push(producto);
+                
+                });
+
+                this.#cesta = new Cesta(this.#array);
+                // console.log(this.#array);
+                this.plantilla();
+            }
+
+            plantilla(){
+
+                this.#array.forEach(element => {
+                    
+
+                    let divProductos = document.getElementById("contProductos");
+                    // Div
+                    let div = document.createElement("div");
+                    div.setAttribute("class", "card col-sm-4");
+                    divProductos.appendChild(div);
+
+                    // Imagen
+                    let ima = document.createElement("img");
+                    ima.setAttribute("class", "card-text");
+                    ima.setAttribute("src", element.imagen);
+                    div.appendChild(ima);
+
+                    // Nombre
+                    let para = document.createElement("p");
+                    para.setAttribute("class", "card-text");
+                    para.innerText += element.nombre;
+                    div.appendChild(para);
+
+                    // Precio
+                    let precio = document.createElement("p");
+                    precio.setAttribute("class", "card-text");
+                    precio.innerText += element.precio;
+                    div.appendChild(precio);
+
+                    // Cantidad
+                    let cantParr = document.createElement("p");
+                    cantParr.setAttribute("class", "card-text");
+                    cantParr.innerText = "Cantidad:";
+                    div.appendChild(cantParr);
+
+                    let cantInput = document.createElement("input");
+                    cantInput.setAttribute("type", "number");
+                    cantInput.setAttribute("min", "1");
+                    cantInput.setAttribute("data-iduni", element.cod);
+                    cantInput.setAttribute("value", "1");
+                    div.appendChild(cantInput);
+
+                    // Boton
+                    let boton = document.createElement("button");
+                    boton.setAttribute("class", "btn btn-outline-secondary");
+                    boton.setAttribute("data-idbot", element.cod);
+                    boton.innerHTML = "Añadir";
+                    div.appendChild(boton);
+
+                    boton.addEventListener(
+                        "click",
+                        () => {
+                            let iduni = document.querySelector(`[data-iduni = "${element.cod}"]`).value;
+                            let idbot = document.querySelector(`[data-idbot = "${element.cod}"]`).dataset.idbot;
+                            
+                            this.#cesta.añadirCesta(idbot, Number(iduni));
+                            // console.log(idbot);
+
+                        }
+                    );
+
+                });
+
+            }
+
+        }
+
+        class Cesta{
+
+            #productos = [];
+            #cestaAñadidos = [];
+            
+
+            constructor(productos){
+                this.#productos = productos;
+                this.cargarDatos();
+                // console.log(this.#cesta);
+            }
+
+            añadirCesta(id, cantidad){
+
+                let find = this.#cestaAñadidos.find(element => element.cod == id );  
+                // console.log(find);
+                if (find == undefined){
+                    this.#cestaAñadidos.push({cod: id,cantidad: cantidad});
+                }else{
+                    find.cantidad += cantidad;
+                }
+
+                // console.log(this.#cestaAñadidos);
+
+                this.guardarDatos();
+                this.mostrarCesta();
+
+            }
+
+            mostrarCesta(){
+                let bodyTable = document.getElementById("bodyTable");
+                
+                bodyTable.innerHTML = "";
+                let totalP = document.getElementById("total");
+                let totalIva = document.getElementById("totalIva");
+                let totalNumber = 0;
+                let total = [];
+
+                this.#cestaAñadidos.forEach(element => {
+                                        
+                    //tr
+                    let tr = document.createElement("tr");
+                    //td
+                    //tdId
+                    let tdId = document.createElement("td");
+                    tdId.setAttribute("scope", "col");
+                    let tdIdText = document.createTextNode(element.cod);
+                    tdId.appendChild(tdIdText);
+                    tr.appendChild(tdId);
+                    //tdNombre
+                    let tdNombre = document.createElement("td");
+                    tdNombre.setAttribute("scope", "col");
+                    let tdNombreText = document.createTextNode(this.#productos[(element.cod-1)].nombre);
+                    tdNombre.appendChild(tdNombreText);
+                    tr.appendChild(tdNombre);
+                    //tdCantidad
+                    let tdCantidad = document.createElement("td");
+                    tdCantidad.setAttribute("scope", "col");
+                    let tdCantidadText = document.createTextNode(element.cantidad);
+                    tdCantidad.appendChild(tdCantidadText);
+                    tr.appendChild(tdCantidad);
+                    //tdPrecio
+                    let tdPrecio = document.createElement("td");
+                    tdPrecio.setAttribute("scope", "col");
+                    let tdPrecioText = document.createTextNode(this.#productos[(element.cod-1)].precio);
+                    tdPrecio.appendChild(tdPrecioText);
+                    tr.appendChild(tdPrecio);
+                    //tdSubTotal
+                    let tdSubTotal = document.createElement("td");
+                    tdSubTotal.setAttribute("scope", "col");
+                    tdSubTotal.innerHTML = (this.#productos[(element.cod-1)].precio*element.cantidad);
+                    // tdSubTotal.appendChild(tdSubTotalText);
+                    tr.appendChild(tdSubTotal);
+                    bodyTable.appendChild(tr);
+                    //Accion
+                    let boton = document.createElement("button");
+                    boton.setAttribute("data-idlim", element.cod);
+                    boton.innerHTML = "Eliminar";
+                    tr.appendChild(boton);
+                    
+                    total.push(Number(tdSubTotal.innerHTML));
+                    // console.log(total);
+
+                    
+                    this.borrarProducto(element.cod);
+                });
+
+                total.forEach(element => {
+                    totalNumber += element;
+                });
+                totalP.innerHTML = "Total: "+totalNumber+"€";
+                totalIva.innerHTML = "Total + IVA (21%):"+(totalNumber*1.21)+"€";
+
+
+            }
+
+
+            borrarProducto(cod){
+
+                let idlim = document.querySelector(`[data-idlim = "${cod}"]`);
+                
+                idlim.addEventListener(
+                        "click",
+                        () => {
+                            let find = this.#cestaAñadidos.findIndex(element => element.cod == cod );
+                            this.#cestaAñadidos.splice(find, 1);
+                            this.mostrarCesta();
+                        }
+                );
+                
+                this.guardarDatos();
+                
+            }
+
+            guardarDatos(){
+
+                // Guardar datos 
+                var objJS=this.#cestaAñadidos;
+                var cadenaJSON=JSON.stringify(objJS);
+                localStorage.setItem("datos", cadenaJSON);
+
+            }
+
+            cargarDatos(){
+
+                // Cargar datos
+                var datos = localStorage.getItem("datos");
+                let obj = JSON.parse(datos);
+
+                if(obj != null){
+                    this.#cestaAñadidos = obj;
+                    this.mostrarCesta();
+                }
+
+
+
+            }
+        }
+
+
+       var productos = [
+        {cod: 1, nombre: "Bolso", precio: 40, imagen: "https://source.unsplash.com/random/500x500/?handbag"},
+        {cod: 2, nombre: "Movil", precio: 320, imagen: "https://source.unsplash.com/random/500x500/?mobile"},
+        {cod: 3, nombre: "Camiseta", precio: 60, imagen: "https://source.unsplash.com/random/500x500/?shirt"},
+        {cod: 4, nombre: "Cámara", precio: 120, imagen: "https://source.unsplash.com/random/500x500/?camera"},
+        {cod: 5, nombre: "Vestido", precio: 40, imagen: "https://source.unsplash.com/random/500x500/?dress"},
+        {cod: 6, nombre: "Taza", precio: 35, imagen: "https://source.unsplash.com/random/500x500/?bowl"},
+        ];
+        
+        window.addEventListener("load", () => new ContProductos(productos));
+
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="titulo">
+                <h1><img src="https://img.icons8.com/color/480/google-photos.png" alt="" id="fotos">De todo...</h1>
+            </div>
+            <p>Ejemplo cálculo de cesta o carrito de la compra</p>
+        </header>
+        <div class="prodCesta">
+            <!-- Productos -->
+            <div id="contProductos" class="col-sm-7 row">
+            </div>
+            <!-- Cesta -->
+            <aside>
+                <h2><img src="https://cdn-icons-png.flaticon.com/512/98/98667.png" alt="" id="fotos"> Cesta</h2>
+                <div class="table-responsive">
+                    <table class="table table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Cod</th>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Precio (€)</th>
+                                <th scope="col">Subtotal</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyTable">
+                            <!-- Elementos a crear -->
+                        </tbody>
+                    </table>
+                    <p id="total">Total: 0.00€</p>
+                    <p id="totalIva">Total + IVA (21%): 0.00€</p>
+                </div>
+            </aside>
+        </div>
+        
+    </div>
+</body>
+</html>
